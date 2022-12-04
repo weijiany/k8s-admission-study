@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+cd "$(dirname "$0")/.."
+
+mkdir -p .kube
+docker-compose build kubernetes
+docker-compose up -d kubernetes

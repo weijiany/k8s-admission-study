@@ -1,0 +1,24 @@
+version: '3'
+services:
+  kubernetes:
+    image: rancher/k3s:v1.23.14-k3s1
+    tmpfs:
+      - /run
+      - /var/run
+    privileged: true
+    command:
+      - server
+      - --tls-san=kubernetes
+      - --bind-address=kubernetes
+      - --write-kubeconfig=/output/config
+      - --write-kubeconfig-mode=666
+      - --disable=traefik,local-storage,metrics-server
+    volumes:
+      - ./.kube:/output
+    restart: unless-stopped
+  kubectl:
+    build:
+      context: docker/kubectl
+    volumes:
+      - ./.kube:/.kube:ro
+      - .:/app

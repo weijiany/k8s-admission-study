@@ -40,3 +40,4 @@ junit.xml
 tsconfig.json
 !/API.md
 cdk.out
+.kube
