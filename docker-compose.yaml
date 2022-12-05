@@ -22,3 +22,15 @@ services:
     volumes:
       - ./.kube:/.kube:ro
       - .:/app
+  dev:
+    build:
+      context: docker/dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - k8s-admission-study-node-modules:/app/node_modules
+
+volumes:
+  k8s-admission-study-node-modules:
+    external: true

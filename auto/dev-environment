@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -eu
+
+cd "$(dirname "$0")/.."
+
+docker volume create k8s-admission-study-node-modules > /dev/null
+docker-compose build dev
+docker-compose run --rm dev sh -c "yarn"
+docker-compose run --rm --service-ports dev "${@:-sh}"
