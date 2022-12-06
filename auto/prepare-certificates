@@ -1,0 +1,80 @@
+#!/usr/bin/env bash
+
+set -eu
+
+cd "$(dirname "$0")/.."
+
+usage() {
+    cat <<EOF
+Prepare CA certificates and server key/certificate with creating secrets
+
+usage: ${0} [OPTIONS]
+
+The following flags are required.
+
+       --service          Service name of webhook.
+       --namespace        Namespace where webhook service and secret reside.
+       --secret           Secret name for CA certificate and server certificate/key pair.
+EOF
+    exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+    case ${1} in
+        --service)
+            service="$2"
+            shift
+            ;;
+        --secret)
+            secret="$2"
+            shift
+            ;;
+        --namespace)
+            namespace="$2"
+            shift
+            ;;
+        *)
+            usage
+            ;;
+    esac
+    shift
+done
+
+[ -z ${service} ] && service=route-admissioner-svc
+[ -z ${secret} ] && secret=route-admissioner-certs
+[ -z ${namespace} ] && namespace=default
+
+if [ ! -x "$(command -v openssl)" ]; then
+    echo "openssl not found"
+    exit 1
+fi
+
+cadir="./ca"
+manifestdir="./manifests"
+mkdir -p "${cadir}"
+mkdir -p "${manifestdir}"
+
+# CA
+openssl genrsa -out ${cadir}/ca.key 2048
+openssl req -x509 -new -nodes -key ${cadir}/ca.key -sha256 -days 35600 \
+  -out ${cadir}/ca.crt \
+  -subj "/C=US/ST=Utah/L=Lehi/O=Your Company, Inc./OU=IT/CN=route-admissioner"
+
+# Server
+openssl genrsa -out ${cadir}/server.key 2048
+openssl req -new -sha256 -key ${cadir}/server.key \
+  -subj "/C=US/ST=Utah/L=Lehi/O=Your Company, Inc./OU=IT/CN=${service}.${namespace}.svc" \
+  -out ${cadir}/server.csr
+openssl x509 -req -in ${cadir}/server.csr -CA ${cadir}/ca.crt -CAkey ${cadir}/ca.key -CAcreateserial -days 35600 -sha256 \
+  -extfile <(printf "subjectAltName=DNS:${service}.${namespace}.svc") \
+  -out ${cadir}/server.crt
+
+# create the secret with CA cert and server cert/key
+kubectl create secret generic ${secret} \
+        --from-file=ca-key.pem=${cadir}/ca.key \
+        --from-file=ca-cert.pem=${cadir}/ca.crt \
+        --from-file=key.pem=${cadir}/server.key \
+        --from-file=cert.pem=${cadir}/server.crt \
+        --dry-run=client -o yaml > "${manifestdir}/secret.yaml"
+
+echo "Write ca files to ${cadir} dir, write k8s secret to ${manifestdir}"

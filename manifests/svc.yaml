@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admission-demo
+  namespace: kube-system
+spec:
+  ports:
+    - name: web
+      protocol: TCP
+      port: 443
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: admission-demo
+  namespace: kube-system
+subsets:
+  - addresses:
+      - ip: 192.168.5.2
+    ports:
+      - name: web
+        protocol: TCP
+        port: 3000
