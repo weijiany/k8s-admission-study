@@ -5,11 +5,11 @@ metadata:
 webhooks:
   - name: "admission-demo.kube-system.svc"
     rules:
-      - apiGroups:   ["apps"]
+      - apiGroups: ["apps"]
         apiVersions: ["v1"]
-        operations:  ["CREATE", "UPDATE"]
-        resources:   ["deployments"]
-        scope:       "Namespaced"
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments"]
+        scope: "Namespaced"
     clientConfig:
       service:
         namespace: "kube-system"

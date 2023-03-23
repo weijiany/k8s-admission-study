@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: busybox
+  name: redis
   labels:
-    app: busybox
+    app: redis
   annotations:
     k8s-admission-study/proxy: 'true'
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: busybox
+      app: redis
   template:
     metadata:
       labels:
-        app: busybox
+        app: redis
     spec:
       containers:
-        - name: busybox
-          image: busybox:1.35.0-musl
+        - name: redis
+          image: redis:7.2-rc1-alpine3.17

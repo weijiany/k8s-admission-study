@@ -25,11 +25,15 @@ export class AppController {
       body['request']['object']['metadata']['annotations'][NGINX_PROXY_KEY],
     );
 
-    const op = [];
+    let op: Record<string, any>;
     if (enableProxy) {
-      op.push(nginxProxyPatchObj('replace', proxyIndex));
-    } else if (proxyIndex != -1) {
-      op.push(nginxProxyPatchObj('remove', proxyIndex));
+      if (proxyIndex === -1) {
+        op = nginxProxyPatchObj('add', -1);
+      } else {
+        op = nginxProxyPatchObj('replace', proxyIndex);
+      }
+    } else {
+      op = nginxProxyPatchObj('remove', proxyIndex);
     }
 
     return {
@@ -39,7 +43,7 @@ export class AppController {
         uid,
         allowed: true,
         patchType: 'JSONPatch',
-        patch: base64(op),
+        patch: base64([op]),
       },
     };
   }
