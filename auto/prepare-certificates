@@ -78,3 +78,14 @@ kubectl create secret generic ${secret} \
         --dry-run=client -o yaml > "${manifestdir}/secret.yaml"
 
 echo "Write ca files to ${cadir} dir, write k8s secret to ${manifestdir}"
+
+runYq() {
+  docker run --rm -it \
+    -v "${PWD}":/app \
+    -w /app \
+    mikefarah/yq:4 "${@}"
+}
+
+ca_cert="$(runYq ".data.\"ca-cert.pem\"" ${manifestdir}/secret.yaml)"
+runYq -i ".webhooks[0].clientConfig.caBundle = \"${ca_cert}\"" "${manifestdir}/admission-webhook.yaml"
+echo "Update admission webhook file caBundle"
